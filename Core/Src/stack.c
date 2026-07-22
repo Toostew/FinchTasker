@@ -9,6 +9,17 @@
 
 
 //this function switches from Main Stack Pointer to Process Stack Pointer
+//ARM's core has two physical stack pointers. MSP is used by exception/interrupt handlers
+//(and by everything, before a scheduler exists) - this is fixed, not task-specific.
+//PSP is for our own tasks - whichever task is currently running uses PSP as its active stack.
+//we need to provide a region of memory, and provide the location of the topmost address
+//During task execution, PSP holds the address one word past the last valid stack element
+//(since ARM stacks grow downward, the initial SP points just past the array's end)
+//This region of memory is part of a larger whole, and is usually part of a Task Control block
+//this region of memory will store everything local to the task like variables, constants, etc.
+//Each task gets its own separate stack region so its local data never collides
+//with another task's stack, or with the kernel/handler stack (MSP).
+
 //provide the beginning address of the stack already set to 512 elements (512 * 32 bits (4 bytes))
 //CAUTION: at the current moment, this function WILL fail. this is because the function, which initially starts off
 //in MSP, converts to PSP before the function can terminate. This will cause hardfaults that are not immediately obvious
