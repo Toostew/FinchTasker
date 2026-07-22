@@ -170,6 +170,12 @@ __STATIC_INLINE uint32_t __get_CONTROL(void)
  */
 __STATIC_INLINE void __set_CONTROL(uint32_t control)
 {
+	//the register keyword is a storage class specifier used to tell the compiler to store the
+	//value in a CPU register instead of generic location in RAM.
+	//the __ASM(); is a GCC/CLANG extension called an explicit register variable.
+	//__ASM("control") the parameter is the name of a specific register. Normally, invoking the register keyword
+	//means that any free General Purpose Register will be used, but by using __ASM("control"), we are specifically
+	//specifying to use the control register.
   register uint32_t __regControl         __ASM("control");
   __regControl = control;
 }

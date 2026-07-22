@@ -110,6 +110,31 @@ int main(void)
   }
 
   //mein code
+  uint32_t task_stack[512]; //array of 512 32 bit (4 byte) register
+
+  //__get_CONTROL() function is provided by ARM to get the CONTROL register
+  uint32_t controlRegister = __get_CONTROL();
+
+  //calculate the top of the stack, it is the tip of the array, plus 1 (so technically, 1 element outside)
+  //sizeof() will compute size in bytes, not bits just so you know
+  volatile uint32_t topOfTask_Stack = ((uint32_t)(task_stack) + (sizeof(task_stack)));
+
+  //another ARM function to set the location of top of stack of PSP
+  __set_PSP(topOfTask_Stack);
+
+  //set SPSEL active stack pointer selection to PSP (bit 1)
+  controlRegister |= (1 << 1);
+
+  //write the changes to the control register
+  __set_CONTROL(controlRegister);
+
+  // Instruction Synchronization Barrier (ISB) instruction. It flushes the processor's pipeline and
+  //fetch buffers, ensuring that all subsequent instructions are fetched from cache or memory after
+  //previous system changes take effect. In short, big config changes, invoke __ISB for safety
+  __ISB();
+
+
+
 
 
 
