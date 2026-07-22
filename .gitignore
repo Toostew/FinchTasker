@@ -3,5 +3,4 @@ FinchTasker.ioc
 FinchTasker.launch
 STM32G474RETX_FLASH.ld
 STM32G474RETX_RAM.ld
-Drivers
 Debug
