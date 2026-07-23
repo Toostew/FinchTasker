@@ -108,8 +108,10 @@ int main(void)
   {
     Error_Handler();
   }
-
   //mein code
+  //for simple LED debugging on PB1
+  blinkConfig();
+
   uint32_t task_stack[512]; //array of 512 32 bit (4 byte) register
 
   //__get_CONTROL() function is provided by ARM to get the CONTROL register
@@ -133,6 +135,11 @@ int main(void)
   //previous system changes take effect. In short, big config changes, invoke __ISB for safety
   __ISB();
 
+
+  //System Control Block; we will access the Interrupt Control and State Register
+  SCB->ICSR |= (1 << 28); //turn on PENSVSET, which sets the pendSV interrupt to PENDING, waiting to be serviced
+  //past this point the CPU will pick it up and go to the PendSV handler function
+  //since pendSV is a core interrupt it is enabled by default so no fucking NVIC
 
 
 

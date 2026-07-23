@@ -14,11 +14,24 @@
 //PSP is for our own tasks - whichever task is currently running uses PSP as its active stack.
 //we need to provide a region of memory, and provide the location of the topmost address
 //During task execution, PSP holds the address one word past the last valid stack element
-//(since ARM stacks grow downward, the initial SP points just past the array's end)
+//(since ARM stacks grow downward, the initial SP points just past the array's top end)
 //This region of memory is part of a larger whole, and is usually part of a Task Control block
 //this region of memory will store everything local to the task like variables, constants, etc.
+//During a context switch, the CPU will automatically push certain Register states into this region of memory. Keep in mind
+//that there is no "special region" to store it within this region, they load the values to wherever the stack pointer was pointing within this stack region
 //Each task gets its own separate stack region so its local data never collides
 //with another task's stack, or with the kernel/handler stack (MSP).
+//I say "certain" registers, it is not enough. We need to manually push other registers ourselves
+
+//understand byte alignment: When you specify a variable to be, say, of 8, 16, 32, or 64 bits (1,2,4,8 bytes respectively),
+//the compiler enforces memory allignment such that the address of the given variable is always divisible by it's size in bytes.
+//so, an 8 bit and 16 bit value (1 and 2 bytes), the 8 bit value can be placed at any address (since any address is divisible by 1)
+//but the 16 bit value (2 bytes) will only be placed on addresses that are divisible by 2.
+//so an 8 bit value could exist on addresses 0x00000001, 0x00000002, 0x00000003.. so on
+//but a 16 bit value can only exist on 0x00000002, 0x00000004, ... so on
+//this applies to the higher bit numbers
+//32 bit numbers are alligned to 4-divisible addresses, so 0x00000004, 0x00000008, 0x0000000C.. so on
+//64 bit number are alligned to 8-divisible addresses, like 0x00000008, 0x00000010, 0x00000018.. so on
 
 //provide the beginning address of the stack already set to 512 elements (512 * 32 bits (4 bytes))
 //CAUTION: at the current moment, this function WILL fail. this is because the function, which initially starts off

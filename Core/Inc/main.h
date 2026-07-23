@@ -34,6 +34,7 @@ extern "C" {
 
 
 #include "stack.h"
+#include "debugHelp.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
