@@ -59,3 +59,43 @@ void psp_switch(uint32_t * taskStack, uint32_t sizeOfStack){
 	  //previous system changes take effect. In short, big config changes, invoke __ISB for safety
 	  __ISB();
 }
+
+
+int assemblyAdd(int a, int b){
+	int value;
+
+	/*
+ __asm__ volatile (
+    " ASSEMBLY CODE ZONE "   // Raw Assembly goes here, %x are positional placeholders
+    : OUTPUT OPERANDS ZONE   // Map C variables you want to WRITE to
+    : INPUT OPERANDS ZONE    // Map C variables you want to READ from
+    : CLOBBER ZONE           // Tell the compiler which registers you modified (optional)
+	);
+
+	  */
+
+
+
+	__asm__ volatile (
+			"ADD %0, %1, %2" //ADD 0(value), 1(a), 2(b)  %0, %1, %2 are placeholders that are evaluated in order
+			: "=r" (value) //the characters inside "" like "=r" are called constraints, and do some small operations or conditions
+			  //all output must have "=". and "r" is a contraint to use a general-purpose register r0-r12
+			: "r"  	(a), //
+			  "r"	(b)
+
+	);
+
+	return value;
+}
+
+
+
+
+
+
+
+
+
+
+
+

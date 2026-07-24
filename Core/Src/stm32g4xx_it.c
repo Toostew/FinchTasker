@@ -170,9 +170,15 @@ void DebugMon_Handler(void)
 
 //this is the handler function that runs when pendSV is triggered
 //
-void PendSV_Handler(void)
+void PendSV_Handler(void)  //this macro declares that this function is naked, as in, C will not treat it normally, and will not generate function entry and exit code. As a consequence, we must write the body in assembly
 {
-	 setResetBlink(1); //for the test this just configures the blink
+	 __asm__ volatile (
+			 "MRS r0, PSP\n\t"		//load address stored at psp into register 0 (MRS: Move from special register to Regular register)
+			 //C compiler goes through it as a single line so use the new line and tab (only new line needed tab is just for QOL)
+			 "BX LR"			//Branch to address stored at register, LR (BX: Branch Indirect, give register and get address within register). lr is the link register (R14) that stores
+			 //the link register stores the return address of a function. When invoked with branch, it goes to that address
+			 //since pendSV is an interrupt, NVIC will handle the routing, sending the cpu to the proper address of the next instruction to run (theres more nuance but thats the idea)
+	 );
 }
 
 /**

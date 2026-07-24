@@ -110,19 +110,35 @@ int main(void)
   }
   //mein code
   //for simple LED debugging on PB1
+
+
+
+
   blinkConfig();
 
-  uint32_t task_stack[512]; //array of 512 32 bit (4 byte) register
+  /*
+  uint32_t task_stackOne[512]; //array of 512 32 bit (4 byte) register
+  uint32_t task_stackTwo[512]; // second one
+
+  //calculate the top of the stack, it is the tip of the array, plus 1 (so technically, 1 element outside)
+  //sizeof() will compute size in bytes, not bits just so you know
+  volatile uint32_t topOfTask_StackOne = ((uint32_t)(task_stackOne) + (sizeof(task_stackOne)));
+  volatile uint32_t topOfTask_StackTwo = ((uint32_t)(task_stackTwo) + (sizeof(task_stackTwo)));
+
+  FirstTCB.basePointer = (uint32_t *)task_stackOne; //arrays are always passed as a pointer of the first element, pointer cast not needed
+  SecondTCB.basePointer = task_stackTwo;
+
+  FirstTCB.topOfStackPointer = (uint32_t *)topOfTask_StackOne;
+  SecondTCB.topOfStackPointer = (uint32_t *)topOfTask_StackTwo;
+
 
   //__get_CONTROL() function is provided by ARM to get the CONTROL register
   uint32_t controlRegister = __get_CONTROL();
 
-  //calculate the top of the stack, it is the tip of the array, plus 1 (so technically, 1 element outside)
-  //sizeof() will compute size in bytes, not bits just so you know
-  volatile uint32_t topOfTask_Stack = ((uint32_t)(task_stack) + (sizeof(task_stack)));
+
 
   //another ARM function to set the location of top of stack of PSP
-  __set_PSP(topOfTask_Stack);
+  __set_PSP(topOfTask_StackOne);
 
   //set SPSEL active stack pointer selection to PSP (bit 1)
   controlRegister |= (1 << 1);
@@ -135,6 +151,9 @@ int main(void)
   //previous system changes take effect. In short, big config changes, invoke __ISB for safety
   __ISB();
 
+  //set the priority of the pendSV to 15, which is the lowest possible priority (0 is highest)
+  //the logic is that context switches only occur when there is no other interrupt that needs to be serviced
+  NVIC_SetPriority(PendSV_IRQn, 15);
 
   //System Control Block; we will access the Interrupt Control and State Register
   SCB->ICSR |= (1 << 28); //turn on PENSVSET, which sets the pendSV interrupt to PENDING, waiting to be serviced
@@ -142,7 +161,11 @@ int main(void)
   //since pendSV is a core interrupt it is enabled by default so no fucking NVIC
 
 
+	*/
 
+  if(assemblyAdd(10, 15) == 25){
+	  setResetBlink(1);
+  }
 
 
 }

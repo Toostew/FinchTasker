@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+
+
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_hal.h"
 
@@ -35,6 +38,13 @@ extern "C" {
 
 #include "stack.h"
 #include "debugHelp.h"
+
+
+extern TransferControlBlock_def FirstTCB;
+extern TransferControlBlock_def SecondTCB;
+
+extern TransferControlBlock_def * currentTask;
+extern TransferControlBlock_def * nextTask;
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
