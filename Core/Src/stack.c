@@ -80,12 +80,22 @@ int assemblyAdd(int a, int b){
 			"ADD %0, %1, %2" //ADD 0(value), 1(a), 2(b)  %0, %1, %2 are placeholders that are evaluated in order
 			: "=r" (value) //the characters inside "" like "=r" are called constraints, and do some small operations or conditions
 			  //all output must have "=". and "r" is a contraint to use a general-purpose register r0-r12
-			: "r"  	(a), //
-			  "r"	(b)
+			: "r"  	(a), // bind the value of a to the 2nd operand
+			  "r"	(b) //bind the value of b to the 3rd operand; for more info look up GCC Extensions
 
 	);
 
 	return value;
+}
+
+//empty for test
+void taskOne(void){
+	for(;;){}
+}
+//empty for test
+void taskTwo(void){
+	  SCB->ICSR |= (1 << 28); //turn on PENSVSET, which sets the pendSV interrupt to PENDING, waiting to be serviced
+	  while(1);
 }
 
 
