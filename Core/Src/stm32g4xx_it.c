@@ -207,13 +207,8 @@ void PendSV_Handler(void)  //this macro declares that this function is naked, as
   */
 void SysTick_Handler(void)
 {
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-
-  /* USER CODE END SysTick_IRQn 1 */
+	toggleBlink();
+	SCB->ICSR |= (1 << 28); //enable
 }
 
 /******************************************************************************/

@@ -35,7 +35,7 @@ extern "C" {
 #include "stm32g4xx_nucleo.h"
 #include <stdio.h>
 
-
+#include "config.h"
 #include "stack.h"
 #include "debugHelp.h"
 

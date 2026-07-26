@@ -167,6 +167,8 @@ int main(void)
   currentTask = &FirstTCB; //remember, when you pointer cast, that treats the value being held AS a pointer
   nextTask = &SecondTCB; //& operator returns the address of said variable
 
+  systick_config();
+
 
   //__get_CONTROL() function is provided by ARM to get the CONTROL register
   uint32_t controlRegister = __get_CONTROL();
@@ -192,9 +194,15 @@ int main(void)
   NVIC_SetPriority(PendSV_IRQn, 15);
 
   //System Control Block; we will access the Interrupt Control and State Register
-  SCB->ICSR |= (1 << 28); //turn on PENSVSET, which sets the pendSV interrupt to PENDING, waiting to be serviced
+  //SCB->ICSR |= (1 << 28); //turn on PENSVSET, which sets the pendSV interrupt to PENDING, waiting to be serviced
   //past this point the CPU will pick it up and go to the PendSV handler function
   //since pendSV is a core interrupt it is enabled by default so no fucking NVIC
+
+
+  //turn on systick
+  systick_toggle(1);
+
+
 
 
   while(1);

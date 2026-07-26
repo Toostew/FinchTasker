@@ -21,3 +21,11 @@ void setResetBlink(int setReset){
 		GPIOB->BSRR |= (1 << 1); //set blink
 	}
 }
+
+void toggleBlink(){
+	if(GPIOB->ODR & (1 << 1)){
+		GPIOB->BSRR |= (1 << 17); //reset
+	} else {
+		GPIOB->BSRR |= (1 << 1); //set
+	}
+}

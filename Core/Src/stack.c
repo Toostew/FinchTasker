@@ -94,7 +94,6 @@ void taskOne(void){
 }
 //empty for test
 void taskTwo(void){
-	  SCB->ICSR |= (1 << 28); //turn on PENSVSET, which sets the pendSV interrupt to PENDING, waiting to be serviced
 	  while(1);
 }
 
