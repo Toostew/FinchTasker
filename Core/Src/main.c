@@ -64,28 +64,12 @@ static void MX_GPIO_Init(void);
   * @retval int
   */
 
-uint32_t task_stackOne[512]; //array of 512 32 bit (4 byte) register
-uint32_t task_stackTwo[512]; // second one
-
-//calculate the top of the stack, it is the tip of the array, plus 1 (so technically, 1 element outside)
-//sizeof() will compute size in bytes, not bits just so you know
-volatile uint32_t  topOfTask_StackOne = ((uint32_t)(task_stackOne) + (sizeof(task_stackOne)));
-volatile uint32_t  topOfTask_StackTwo = ((uint32_t)(task_stackTwo) + (sizeof(task_stackTwo)));
 
 
-//below are extern values, understand that declaring them in the header does not mean the compiler will allocate memory
-//we must essentially double-declare, one in the header, to tell the compiler ts exists, and one in the source, to allocate memory/implement its body
-TransferControlBlock_def FirstTCB = {
-			.stackPointer = NULL,
-			.basePointer = NULL, //arrays are always passed as a pointer of the first element, pointer cast not needed
-		  	.topOfStackPointer = NULL
-	  };
 
-TransferControlBlock_def SecondTCB = {
-			.stackPointer = NULL,
-			.basePointer = NULL,
-			.topOfStackPointer = NULL
-	  };
+TransferControlBlock_def * transferControlBlockList[transferControlBlockListLength];
+uint16_t transferControlBlockListIndex = 0;
+
 
 
 TransferControlBlock_def * currentTask;
@@ -144,63 +128,12 @@ int main(void)
 
   blinkConfig();
 
-  task_stackOne[512 - 3] = (uint32_t) 0; //LR
-  task_stackOne[512 - 2] = (uint32_t) &taskOne; //PC
-  task_stackOne[512 - 1] = (uint32_t) 0x01000000; //PSR
-
-  task_stackTwo[512 - 3] = (uint32_t) 0; //LR
-  task_stackTwo[512 - 2] = (uint32_t) &taskTwo; //PC
-  task_stackTwo[512 - 1] = (uint32_t) 0x01000000; //PSR
-
-
-  FirstTCB.stackPointer = (uint32_t *)(topOfTask_StackOne);
-  FirstTCB.basePointer = (uint32_t *)task_stackOne;
-  FirstTCB.topOfStackPointer = (uint32_t *)topOfTask_StackOne;
-  FirstTCB.taskFunction = (uint32_t *)&taskOne;
-
-  SecondTCB.stackPointer = (uint32_t *)(topOfTask_StackTwo - 64UL); // 64 bytes down, 16 4-byte words
-  SecondTCB.basePointer = (uint32_t *)task_stackTwo;
-  SecondTCB.topOfStackPointer = (uint32_t *)topOfTask_StackTwo;
-  SecondTCB.taskFunction = (uint32_t *)&taskTwo;
-
-
-  currentTask = &FirstTCB; //remember, when you pointer cast, that treats the value being held AS a pointer
-  nextTask = &SecondTCB; //& operator returns the address of said variable
-
   systick_config();
 
-
-  //__get_CONTROL() function is provided by ARM to get the CONTROL register
-  uint32_t controlRegister = __get_CONTROL();
+  createTask(512, &taskOne);
 
 
-
-  //another ARM function to set the location of top of stack of PSP
-  __set_PSP((uint32_t)currentTask->stackPointer);
-
-  //set SPSEL active stack pointer selection to PSP (bit 1)
-  controlRegister |= (1 << 1);
-
-  //write the changes to the control register
-  __set_CONTROL(controlRegister);
-
-  // Instruction Synchronization Barrier (ISB) instruction. It flushes the processor's pipeline and
-  //fetch buffers, ensuring that all subsequent instructions are fetched from cache or memory after
-  //previous system changes take effect. In short, big config changes, invoke __ISB for safety
-  __ISB();
-
-  //set the priority of the pendSV to 15, which is the lowest possible priority (0 is highest)
-  //the logic is that context switches only occur when there is no other interrupt that needs to be serviced
-  NVIC_SetPriority(PendSV_IRQn, 15);
-
-  //System Control Block; we will access the Interrupt Control and State Register
-  //SCB->ICSR |= (1 << 28); //turn on PENSVSET, which sets the pendSV interrupt to PENDING, waiting to be serviced
-  //past this point the CPU will pick it up and go to the PendSV handler function
-  //since pendSV is a core interrupt it is enabled by default so no fucking NVIC
-
-
-  //turn on systick
-  systick_toggle(1);
+  //schedulerConfig();
 
 
 

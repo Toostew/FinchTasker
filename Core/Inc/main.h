@@ -38,13 +38,19 @@ extern "C" {
 #include "config.h"
 #include "stack.h"
 #include "debugHelp.h"
+#include "stdlib.h"
 
+
+#define transferControlBlockListLength 10
 
 extern TransferControlBlock_def FirstTCB;
 extern TransferControlBlock_def SecondTCB;
 
 extern TransferControlBlock_def * currentTask;
 extern TransferControlBlock_def * nextTask;
+
+extern TransferControlBlock_def * transferControlBlockList[];
+extern uint16_t transferControlBlockListIndex;
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

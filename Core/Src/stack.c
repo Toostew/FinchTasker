@@ -36,7 +36,7 @@
 //provide the beginning address of the stack already set to 512 elements (512 * 32 bits (4 bytes))
 //CAUTION: at the current moment, this function WILL fail. this is because the function, which initially starts off
 //in MSP, converts to PSP before the function can terminate. This will cause hardfaults that are not immediately obvious
-void psp_switch(uint32_t * taskStack, uint32_t sizeOfStack){
+void psp_switchConfig(uint32_t * taskStack, uint32_t sizeOfStack){
 
 	  //__get_CONTROL() function is provided by ARM to get the CONTROL register
 	  uint32_t controlRegister = __get_CONTROL();
@@ -51,12 +51,31 @@ void psp_switch(uint32_t * taskStack, uint32_t sizeOfStack){
 	  //set SPSEL active stack pointer selection to PSP (bit 1)
 	  controlRegister |= (1 << 1);
 
-	  //write the changes to the control register
-	  __set_CONTROL(controlRegister);
+
+	  NVIC_SetPriority(PendSV_IRQn, 15);
+	  //write the changes to the control register ()
+	  //do  not trigger on
+	  //__set_CONTROL(controlRegister);
 
 	  // Instruction Synchronization Barrier (ISB) instruction. It flushes the processor's pipeline and
 	  //fetch buffers, ensuring that all subsequent instructions are fetched from cache or memory after
 	  //previous system changes take effect. In short, big config changes, invoke __ISB for safety
+	  __ISB();
+}
+
+
+//this is the separate config function to set the first task into sequence
+//we do not set control here ourselves, we'll do this in the supervisor call with arm assembly
+void schedulerConfig(TransferControlBlock_def * firstTask){
+
+	  uint32_t controlRegister = __get_CONTROL();
+
+	  __set_PSP((uint32_t)firstTask->topOfStackPointer);
+
+	  controlRegister |= (1 << 1); //set Stack Pointer Select to PSP
+
+	  NVIC_SetPriority(PendSV_IRQn, 15);
+
 	  __ISB();
 }
 
@@ -88,6 +107,37 @@ int assemblyAdd(int a, int b){
 	return value;
 }
 
+
+//creates task for you
+void createTask(uint32_t stackSizeInWords, void * taskFunction){
+	uint32_t * stackRegion = (uint32_t *)malloc(stackSizeInWords * sizeof(uint32_t));
+	if(stackRegion == NULL){
+		return;
+	}
+
+	  uint32_t topOfTask_Stack = ((uint32_t)(stackRegion) + (stackSizeInWords * sizeof(uint32_t)));
+
+
+	  //check if there's any space left in the taskList
+	  if(transferControlBlockListIndex >= transferControlBlockListLength){
+			return;
+	  }
+
+	  //create the TCB
+	TransferControlBlock_def task = {
+			.basePointer = stackRegion,
+			.stackPointer = (uint32_t *)topOfTask_Stack,
+			.topOfStackPointer = (uint32_t *)topOfTask_Stack,
+			.taskFunction = (uint32_t *)taskFunction
+	};
+
+	//add to the TCB list
+	transferControlBlockList[transferControlBlockListIndex] = &task;
+	transferControlBlockListIndex++;
+
+
+}
+
 //empty for test
 void taskOne(void){
 	for(;;){}
@@ -95,6 +145,10 @@ void taskOne(void){
 //empty for test
 void taskTwo(void){
 	  while(1);
+}
+
+void tastThree(){
+	while(1);
 }
 
 
