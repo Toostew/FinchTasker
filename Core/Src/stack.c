@@ -158,19 +158,19 @@ void createTask(uint32_t stackSizeInWords, void * taskFunction){
 //empty for test
 void taskOne(void){
 	while(1){
-
+		toggleBlink(0);
 	}
 }
 //empty for test
 void taskTwo(void){
 	  while(1){
-		  toggleBlink();
+		  toggleBlink(1);
 	  }
 }
 
 void taskThree(){
 	while(1){
-
+		toggleBlink(2);
 	}
 }
 

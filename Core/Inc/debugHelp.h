@@ -10,6 +10,6 @@
 
 void blinkConfig();
 void setResetBlink(int setReset);
-void toggleBlink();
+void toggleBlink(int pin);
 
 #endif /* INC_DEBUGHELP_H_ */
