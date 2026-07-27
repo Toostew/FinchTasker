@@ -141,14 +141,11 @@ void UsageFault_Handler(void)
 /**
   * @brief This function handles System service call via SWI instruction.
   */
+
+//SuperVisor Call
 void SVC_Handler(void)
 {
-  /* USER CODE BEGIN SVCall_IRQn 0 */
 
-  /* USER CODE END SVCall_IRQn 0 */
-  /* USER CODE BEGIN SVCall_IRQn 1 */
-
-  /* USER CODE END SVCall_IRQn 1 */
 }
 
 /**
@@ -168,6 +165,7 @@ void DebugMon_Handler(void)
   * @brief This function handles Pendable request for system service.
   */
 
+/*
 //this is the handler function that runs when pendSV is triggered
 //in this function you'll notice I dereference, assign etc but it seeem inconsistent, but this is actually just a feature of assembly
 //assembly has its own structure and ruleset of when to treat values in registers as addresses directly or if it requires dereferencing
@@ -187,7 +185,7 @@ void PendSV_Handler(void)  //this macro declares that this function is naked, as
 			 "LDR r0, [r0]\n\t" //dereference the address, r0 now contains the pointer that points to the TCB (first element)
 			 "LDR r0, [r0]\n\t" //dereference AGAIN so that, r0 now contains the stack pointer (actual memory region)
 			 "LDMIA r0!, {R4-R11}\n\t"//load, increment after, starting at base address stored in r0, for registers R4 to R11
-			 "MSR PSP, r0\n\t"
+			 "MSR PSP, r0\n\t" //load address stored in r0 to PSP
 			 //due to LDR, STR requiring [], which means dereferencing, we need 4 registers to do this swap
 			 "LDR r1, =nextTask\n\t"
 			 "LDR r2, =currentTask\n\t"
@@ -199,6 +197,45 @@ void PendSV_Handler(void)  //this macro declares that this function is naked, as
 			 "BX LR"			//Branch to address stored at register LR (BX: Branch Indirect, give register and get address within register). lr is the link register (R14) that stores
 			 //the link register stores the return address of a function. When invoked with branch, it goes to that address
 			 //since pendSV is an interrupt, NVIC will handle the routing, sending the cpu to the proper address of the next instruction to run (theres more nuance but thats the idea)
+	 );
+} */
+
+void PendSV_Handler(void)  //this macro declares that this function is naked, as in, C will not treat it normally, and will not generate function entry and exit code. As a consequence, we must write the body in assembly
+{
+	 __asm__ volatile (
+			 //STORE the current task into memory
+			 "MRS r0, PSP\n\t"		//load address stored at psp into register 0 (MRS: Move from special register to Regular register)
+			 //C compiler goes through it as a single line so use the new line and tab (only new line needed tab is just for QOL)
+			 "STMDB r0!, {R4-R11}\n\t" //Store into memory, using address stored in r0, Registers 4 to 11. ! declares writeback, meaning that the address at r0 is updated with the new values in memory
+			 "LDR r1, =currentTask\n\t" //load into register, absolute address of the variable currentTask itself, not the pointer that it stores
+			 "LDR r1, [r1]\n\t" //dereference the value at r1, so the absolute variable address, we are targetting the pointer stored at that address
+			 "STR r0, [r1]\n\t" //dereference currentTask, store value of r0 in the stack pointer member
+
+			 //we push 2 Registers, total 64 bits (8 bytes) to match with the AAPCS rule for 8-byte allignment
+			 //The rule is that the stack pointer needs to be 8-byte alligned before a function call
+			 //we are calling schedularCompute by using BL, so by then, the SP MUST be 8 byte-alligned
+			 //hence, we push a random register just for padding, we're not actually gonna use R4 or whatever
+			 //we choose R4 because it's the safest bet, because certain registers like r0-r3/r12 are part of a set
+			 //of registers stated in AAPCS that cannot be guaranteed to be untouched. Function might or might no utilize them
+			 //this is the reason why interrupts auto-stack these registers. R4 is not part of this so there is no issue
+			 //R4 and other Callee saved registers (the function getting called) are obliged to be restored to their original state
+			 //Caller saved registers (the function-caller) are not under any obligation to be saved
+			 "PUSH {LR,R4}\n\t"
+			 //we no longer swap the next and current task here, that's handled in standard C code, elsewhere, we just invoke the function
+			 "BL schedulerCompute\n\t" //scheduler compute will handle the task ordering
+
+			 "POP {LR,R4}\n\t"
+			 //LOAD the new task into the CPU
+			 "LDR r0, =nextTask\n\t"//load the absolute address of the next task, r0 holds the absolute address of the variable nextTask
+			 "LDR r0, [r0]\n\t" //dereference the address, r0 now contains the pointer that points to the TCB (first element)
+			 "LDR r0, [r0]\n\t" //dereference AGAIN so that, r0 now contains the stack pointer (actual memory region)
+			 "LDMIA r0!, {R4-R11}\n\t"//load, increment after, starting at base address stored in r0, for registers R4 to R11
+			 "MSR PSP, r0\n\t" //load address stored in r0 to PSP
+
+			 "BX LR"			//Branch to address stored at register LR (BX: Branch Indirect, give register and get address within register). lr is the link register (R14) that stores
+			 //the link register stores the return address of a function. When invoked with branch, it goes to that address
+			 //since pendSV is an interrupt, NVIC will handle the routing, sending the cpu to the proper address of the next instruction to run (theres more nuance but thats the idea)
+			 //since we are within an exception, LR is actually populated with a specific calue noted EXC_RETURN
 	 );
 }
 

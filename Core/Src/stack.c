@@ -66,7 +66,7 @@ void psp_switchConfig(uint32_t * taskStack, uint32_t sizeOfStack){
 
 //this is the separate config function to set the first task into sequence
 //we do not set control here ourselves, we'll do this in the supervisor call with arm assembly
-void schedulerConfig(TransferControlBlock_def * firstTask){
+uint32_t schedulerConfig(TransferControlBlock_def * firstTask){
 
 	  uint32_t controlRegister = __get_CONTROL();
 
@@ -80,32 +80,17 @@ void schedulerConfig(TransferControlBlock_def * firstTask){
 }
 
 
-int assemblyAdd(int a, int b){
-	int value;
-
-	/*
- __asm__ volatile (
-    " ASSEMBLY CODE ZONE "   // Raw Assembly goes here, %x are positional placeholders
-    : OUTPUT OPERANDS ZONE   // Map C variables you want to WRITE to
-    : INPUT OPERANDS ZONE    // Map C variables you want to READ from
-    : CLOBBER ZONE           // Tell the compiler which registers you modified (optional)
-	);
-
-	  */
+//this function figures out who's up next, using round robin (simple)
+void schedulerCompute(void){
 
 
 
-	__asm__ volatile (
-			"ADD %0, %1, %2" //ADD 0(value), 1(a), 2(b)  %0, %1, %2 are placeholders that are evaluated in order
-			: "=r" (value) //the characters inside "" like "=r" are called constraints, and do some small operations or conditions
-			  //all output must have "=". and "r" is a contraint to use a general-purpose register r0-r12
-			: "r"  	(a), // bind the value of a to the 2nd operand
-			  "r"	(b) //bind the value of b to the 3rd operand; for more info look up GCC Extensions
-
-	);
-
-	return value;
 }
+
+
+
+
+
 
 
 //creates task for you
@@ -133,7 +118,7 @@ void createTask(uint32_t stackSizeInWords, void * taskFunction){
 
 	//add to the TCB list
 	transferControlBlockList[transferControlBlockListIndex] = &task;
-	transferControlBlockListIndex++;
+	transferControlBlockListIndex++; //once this fill completely, this becomes the index of the last element, assuming it doesnt overflow out
 
 
 }
@@ -147,10 +132,36 @@ void taskTwo(void){
 	  while(1);
 }
 
-void tastThree(){
+void taskThree(){
 	while(1);
 }
 
+
+
+int assemblyAdd(int a, int b){
+	int value;
+
+	/*
+ __asm__ volatile (
+    " ASSEMBLY CODE ZONE "   // Raw Assembly goes here, %x are positional placeholders
+    : OUTPUT OPERANDS ZONE   // Map C variables you want to WRITE to
+    : INPUT OPERANDS ZONE    // Map C variables you want to READ from
+    : CLOBBER ZONE           // Tell the compiler which registers you modified (optional)
+	);
+
+	  */
+
+	__asm__ volatile (
+			"ADD %0, %1, %2" //ADD 0(value), 1(a), 2(b)  %0, %1, %2 are placeholders that are evaluated in order
+			: "=r" (value) //the characters inside "" like "=r" are called constraints, and do some small operations or conditions
+			  //all output must have "=". and "r" is a contraint to use a general-purpose register r0-r12
+			: "r"  	(a), // bind the value of a to the 2nd operand
+			  "r"	(b) //bind the value of b to the 3rd operand; for more info look up GCC Extensions
+
+	);
+
+	return value;
+}
 
 
 

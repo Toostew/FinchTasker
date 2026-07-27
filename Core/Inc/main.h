@@ -41,7 +41,7 @@ extern "C" {
 #include "stdlib.h"
 
 
-#define transferControlBlockListLength 10
+#define transferControlBlockListLength 5
 
 extern TransferControlBlock_def FirstTCB;
 extern TransferControlBlock_def SecondTCB;
@@ -50,7 +50,8 @@ extern TransferControlBlock_def * currentTask;
 extern TransferControlBlock_def * nextTask;
 
 extern TransferControlBlock_def * transferControlBlockList[];
-extern uint16_t transferControlBlockListIndex;
+extern uint16_t transferControlBlockListIndex; //use this value to populate the array
+extern uint16_t transferControlBlockListCurrentIndex;
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

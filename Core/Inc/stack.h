@@ -17,11 +17,13 @@ typedef struct {
 
 
 void psp_switchConfig(uint32_t * taskStack, uint32_t sizeOfStack);
-void schedulerConfig(TransferControlBlock_def * firstTask);
+uint32_t schedulerConfig(TransferControlBlock_def * firstTask);
 void createTask(uint32_t stackSizeInWords, void * taskFunction);
 int assemblyAdd(int a, int b);
+void schedulerCompute(void);
 void taskOne(void);
 void taskTwo(void);
+void taskThree(void);
 
 
 #endif /* INC_STACK_H_ */

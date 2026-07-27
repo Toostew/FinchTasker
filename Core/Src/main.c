@@ -68,7 +68,8 @@ static void MX_GPIO_Init(void);
 
 
 TransferControlBlock_def * transferControlBlockList[transferControlBlockListLength];
-uint16_t transferControlBlockListIndex = 0;
+uint16_t transferControlBlockListIndex = 0; //start at beginning
+uint16_t transferControlBlockListCurrentIndex = 0;
 
 
 
@@ -130,7 +131,20 @@ int main(void)
 
   systick_config();
 
+
+
   createTask(512, &taskOne);
+  createTask(256, &taskTwo);
+  createTask(128, &taskThree);
+  createTask(128, &taskThree);
+  createTask(128, &taskThree);
+
+  uint32_t controlRegValue = schedulerConfig(transferControlBlockList[0]);
+
+  //invoke SVC
+	__asm__ volatile (
+			"SVC 0x0" //SuperVisor Call with attached 8 bit value (we're not gonna use it)
+	);
 
 
   //schedulerConfig();
