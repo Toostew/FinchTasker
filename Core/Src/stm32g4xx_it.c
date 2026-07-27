@@ -145,7 +145,21 @@ void UsageFault_Handler(void)
 //SuperVisor Call
 void SVC_Handler(void)
 {
+	//we need to return an EXTI_RETURN value of 0xFFFFFFFD,
+	//returns to thread mode, non-FPU, from PSP, uses PSP on return
 
+	__asm__ volatile (
+			"LDR R0, =0xFFFFFFFD\n\t" //this loads the value direct into R0
+			"MOV LR, R0\n\t" //load value in R0 to LR
+			 "LDR r0, =currentTask\n\t"//load the absolute address of the current task, r0 holds the absolute address of the variable nextTask
+			 "LDR r0, [r0]\n\t" //dereference the address, r0 now contains the pointer that points to the TCB (first element)
+			 "LDR r0, [r0]\n\t" //dereference AGAIN so that, r0 now contains the stack pointer (actual memory region)
+			 "LDMIA r0!, {R4-R11}\n\t"//load, increment after, starting at base address stored in r0, for registers R4 to R11
+			 "MSR PSP, r0\n\t" //load address stored in r0 to PSP
+
+			 "BX LR\n\t"			//Branch to address stored at register LR (BX: Branch Indirect, give register and get address within register). lr is the link register (R14) that stores
+			//this causes it to load LR value, return to PSP in thread mode
+	);
 }
 
 /**
@@ -232,7 +246,7 @@ void PendSV_Handler(void)  //this macro declares that this function is naked, as
 			 "LDMIA r0!, {R4-R11}\n\t"//load, increment after, starting at base address stored in r0, for registers R4 to R11
 			 "MSR PSP, r0\n\t" //load address stored in r0 to PSP
 
-			 "BX LR"			//Branch to address stored at register LR (BX: Branch Indirect, give register and get address within register). lr is the link register (R14) that stores
+			 "BX LR\n\t"			//Branch to address stored at register LR (BX: Branch Indirect, give register and get address within register). lr is the link register (R14) that stores
 			 //the link register stores the return address of a function. When invoked with branch, it goes to that address
 			 //since pendSV is an interrupt, NVIC will handle the routing, sending the cpu to the proper address of the next instruction to run (theres more nuance but thats the idea)
 			 //since we are within an exception, LR is actually populated with a specific calue noted EXC_RETURN
@@ -244,8 +258,7 @@ void PendSV_Handler(void)  //this macro declares that this function is naked, as
   */
 void SysTick_Handler(void)
 {
-	toggleBlink();
-	SCB->ICSR |= (1 << 28); //enable
+	SCB->ICSR |= (1 << 28); //fire pendSV
 }
 
 /******************************************************************************/

@@ -39,6 +39,7 @@ extern "C" {
 #include "stack.h"
 #include "debugHelp.h"
 #include "stdlib.h"
+#include "string.h"
 
 
 #define transferControlBlockListLength 5
@@ -51,7 +52,15 @@ extern TransferControlBlock_def * nextTask;
 
 extern TransferControlBlock_def * transferControlBlockList[];
 extern uint16_t transferControlBlockListIndex; //use this value to populate the array
-extern uint16_t transferControlBlockListCurrentIndex;
+extern uint16_t transferControlBlockListNextIndex;
+
+//global variable counts, for test
+extern int taskZeroRuns;
+extern int taskOneRuns;
+extern int taskTwoRuns;
+extern int taskThreeRuns;
+extern int taskFourRuns;
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

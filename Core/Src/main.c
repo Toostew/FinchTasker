@@ -69,12 +69,19 @@ static void MX_GPIO_Init(void);
 
 TransferControlBlock_def * transferControlBlockList[transferControlBlockListLength];
 uint16_t transferControlBlockListIndex = 0; //start at beginning
-uint16_t transferControlBlockListCurrentIndex = 0;
+uint16_t transferControlBlockListNextIndex = 1; //the first task to be added is ALWAYS the current task on first run
 
 
 
 TransferControlBlock_def * currentTask;
 TransferControlBlock_def * nextTask;
+
+int taskZeroRuns = 0;
+int taskOneRuns = 0;
+int taskTwoRuns = 0;
+int taskThreeRuns = 0;
+int taskFourRuns = 0;
+
 
 int main(void)
 {
@@ -133,26 +140,27 @@ int main(void)
 
 
 
-  createTask(512, &taskOne);
-  createTask(256, &taskTwo);
-  createTask(128, &taskThree);
-  createTask(128, &taskThree);
-  createTask(128, &taskThree);
+  createTask(512, &taskOne); //taskZero
+  createTask(256, &taskTwo); //taskOne
+  createTask(128, &taskThree); //taskTwo
+  createTask(128, &taskTwo); //taskThree
+  createTask(128, &taskThree); //taskFour
 
-  uint32_t controlRegValue = schedulerConfig(transferControlBlockList[0]);
+  schedulerConfig(transferControlBlockList[0], transferControlBlockList[1]);
 
+  systick_toggle(1);
   //invoke SVC
 	__asm__ volatile (
-			"SVC 0x0" //SuperVisor Call with attached 8 bit value (we're not gonna use it)
+		"SVC 0x0" //SuperVisor Call with attached 8 bit value (we're not gonna use it)
 	);
 
-
-  //schedulerConfig();
-
+	//past this point, the code will never return here.
 
 
 
-  while(1);
+
+
+	while(1);
 
 
 

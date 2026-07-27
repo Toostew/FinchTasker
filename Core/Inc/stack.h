@@ -17,7 +17,7 @@ typedef struct {
 
 
 void psp_switchConfig(uint32_t * taskStack, uint32_t sizeOfStack);
-uint32_t schedulerConfig(TransferControlBlock_def * firstTask);
+void schedulerConfig(TransferControlBlock_def * firstTask, TransferControlBlock_def * secondTask);
 void createTask(uint32_t stackSizeInWords, void * taskFunction);
 int assemblyAdd(int a, int b);
 void schedulerCompute(void);

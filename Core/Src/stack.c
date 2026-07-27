@@ -66,13 +66,14 @@ void psp_switchConfig(uint32_t * taskStack, uint32_t sizeOfStack){
 
 //this is the separate config function to set the first task into sequence
 //we do not set control here ourselves, we'll do this in the supervisor call with arm assembly
-uint32_t schedulerConfig(TransferControlBlock_def * firstTask){
+void schedulerConfig(TransferControlBlock_def * firstTask, TransferControlBlock_def * secondTask ){
 
-	  uint32_t controlRegister = __get_CONTROL();
+		//set the first and second tasks as current and next
+	  currentTask = firstTask;
+	  nextTask = secondTask;
 
 	  __set_PSP((uint32_t)firstTask->topOfStackPointer);
 
-	  controlRegister |= (1 << 1); //set Stack Pointer Select to PSP
 
 	  NVIC_SetPriority(PendSV_IRQn, 15);
 
@@ -81,10 +82,35 @@ uint32_t schedulerConfig(TransferControlBlock_def * firstTask){
 
 
 //this function figures out who's up next, using round robin (simple)
+//on first run 1 has already been computed as the next task
 void schedulerCompute(void){
+	//do swap first, then check values
+	currentTask = nextTask;
 
+	transferControlBlockListNextIndex++;
 
+	if(transferControlBlockListNextIndex >= transferControlBlockListLength){
+		transferControlBlockListNextIndex = 0; //reset to 0
+	}
+	nextTask = transferControlBlockList[transferControlBlockListNextIndex];
 
+	switch(transferControlBlockListNextIndex){
+		case 0:
+			taskZeroRuns++;
+			break;
+		case 1:
+			taskOneRuns++;
+			break;
+		case 2:
+			taskTwoRuns;
+			break;
+		case 3:
+			taskThreeRuns++;
+			break;
+		case 4:
+			taskFourRuns++;
+			break;
+	}
 }
 
 
@@ -96,11 +122,16 @@ void schedulerCompute(void){
 //creates task for you
 void createTask(uint32_t stackSizeInWords, void * taskFunction){
 	uint32_t * stackRegion = (uint32_t *)malloc(stackSizeInWords * sizeof(uint32_t));
+
 	if(stackRegion == NULL){
 		return;
 	}
+	memset(stackRegion, 0, (stackSizeInWords * sizeof(uint32_t))); //set every byte to 0
+	uint32_t topOfTask_Stack = ((uint32_t)(stackRegion) + (stackSizeInWords * sizeof(uint32_t)));
+	uint32_t fakeStackPointer = ((uint32_t)(topOfTask_Stack) - 64);
 
-	  uint32_t topOfTask_Stack = ((uint32_t)(stackRegion) + (stackSizeInWords * sizeof(uint32_t)));
+	*(uint32_t *)((uint8_t *)fakeStackPointer + 0x3C) = 0x01000000; //xPSR, offset by 60 bytes, not 64 since technically topofTaskStack is 4 bytes (1 element) out
+	*(uint32_t *)((uint8_t *)fakeStackPointer + 0x38) = (uint32_t)taskFunction; //PC
 
 
 	  //check if there's any space left in the taskList
@@ -108,16 +139,17 @@ void createTask(uint32_t stackSizeInWords, void * taskFunction){
 			return;
 	  }
 
-	  //create the TCB
-	TransferControlBlock_def task = {
-			.basePointer = stackRegion,
-			.stackPointer = (uint32_t *)topOfTask_Stack,
-			.topOfStackPointer = (uint32_t *)topOfTask_Stack,
-			.taskFunction = (uint32_t *)taskFunction
-	};
+	  //create the TCB with malloc
+	  //(remember: local variables are destroyed on function termination)
+	  TransferControlBlock_def * task = (TransferControlBlock_def *)malloc(sizeof(TransferControlBlock_def));
+
+	  task->basePointer = stackRegion;
+	  task->stackPointer = (uint32_t *)fakeStackPointer;
+	  task->topOfStackPointer = (uint32_t *)topOfTask_Stack;
+	  task->taskFunction = (uint32_t *)taskFunction;
 
 	//add to the TCB list
-	transferControlBlockList[transferControlBlockListIndex] = &task;
+	transferControlBlockList[transferControlBlockListIndex] = task;
 	transferControlBlockListIndex++; //once this fill completely, this becomes the index of the last element, assuming it doesnt overflow out
 
 
@@ -125,15 +157,21 @@ void createTask(uint32_t stackSizeInWords, void * taskFunction){
 
 //empty for test
 void taskOne(void){
-	for(;;){}
+	while(1){
+
+	}
 }
 //empty for test
 void taskTwo(void){
-	  while(1);
+	  while(1){
+		  toggleBlink();
+	  }
 }
 
 void taskThree(){
-	while(1);
+	while(1){
+
+	}
 }
 
 
